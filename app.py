@@ -2,8 +2,10 @@ from flask import Flask, jsonify, request
 from bitcoin import *
 from hashlib import sha256
 import time
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 MAX_NONCE=10000000
 
@@ -30,43 +32,67 @@ def mine(block_number,transaction,previous_hash,prefix_zeros):
 
 
 
-@app.route('/greeting', methods=['GET'])
+@app.route('/startmining', methods=['POST'])
 def mining_machine():
   
-#   group_id = request.args.get('group_id')
-#   transactions = request.args.get('transactions')
-#   difficulty = request.args.get('difficulty')
-#   block_number = request.args.get('block_number')
-#   previous_hash = request.args.get('previous_hash')
+  group_id = str(request.form.get('group_id'))
+  transactions = str(request.form.get('transactions'))
+  difficulty = request.form.get('difficulty')
+  block_number = request.form.get('block_number')
+  previous_hash = str(request.form.get('previous_hash'))
+
+  print('id:'+group_id+',transaction:'+transactions+",difficulity:"+str(difficulty)+",blockno"+str(block_number)+",prev hash"+previous_hash)
   
-  group_id = 'A'
-  transactions = '0->A->5 A->B->10 B->C->5 B->C->5'
-  difficulty = '2'
-  block_number = '2'
-  previous_hash = '000000000000000000006bd3d6ef94d8a01de84e171d3553534783b128f06aad'
+  #group_id = 'A'
+  #transactions = '0->A->5 A->B->10 B->C->5 B->C->5'
+  #difficulty = '2'
+  #block_number = '2'
+  #previous_hash = '000000000000000000006bd3d6ef94d8a01de84e171d3553534783b128f06aad'
   
   
 
-  print("Group ID")
-  #group_id = input()
   coinbase= f'0->{group_id}->5 '
-  print("provide the transaction list(as a string)")
-  #transactions = input()
+ 
   transactions = coinbase + transactions
-  #"."
-  #684260
-  print('what is the current level of difficulty?')
-  #difficulty = input()
-  difficulty = int(difficulty)
+
+  
+
+  if difficulty is not None:
+      try:
+          app.logger.info(difficulty)
+          difficulty = int(difficulty)
+          # Use group_id_int as an integer
+      except ValueError:
+          # Handle the case where group_id is not a valid integer
+          print("Invalid difficulty value. Must be an integer.")
+  else:
+      # Handle the case where group_id is None
+      difficulty = 2
+
+      print("difficulty parameter is missing in the request.")
+  
+
   import time as t
   begin=t.time()
-  #previous_hash=input('previous hash: ')
-  print('block number: ')
-  #block_number =input()
-  block_number = int(block_number)
+
+  if block_number is not None:
+      try:
+          app.logger.info(block_number)
+          block_number = int(block_number)
+          # Use group_id_int as an integer
+      except ValueError:
+          # Handle the case where group_id is not a valid integer
+          print("Invalid block_number value. Must be an integer.")
+  else:
+      # Handle the case where group_id is None
+      block_number = 2
+
+      print("block_number parameter is missing in the request.")
+  
   new_hash, nonce = mine(block_number ,transactions,previous_hash,difficulty)
 
   time_taken=t.time()- begin
+  
   print("The mining process took ",time_taken,"seconds")
 
   print('=================================================================')
@@ -87,9 +113,19 @@ def mining_machine():
   print('confirmed transaction list:')
   print(transactions)
   print('=================================================================')
-  app.logger.info("get identity response %s", transactions)
 
-  return jsonify(transactions), 200
+  result = {
+        "Current block Number": block_number,
+        "New Block Hash": new_hash,
+        "previous block hash": previous_hash,
+        "Nonce": nonce,
+        "Block Content": "confirmed transaction list",
+        "Transactions": transactions
+  }
+
+  app.logger.info("Mining result: %s", result)
+
+  return jsonify(result), 200
   #return jsonify(message=f"Done!")
 
 
