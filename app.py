@@ -95,35 +95,77 @@ def mining_machine():
   
   print("The mining process took ",time_taken,"seconds")
 
-  print('=================================================================')
-  print('\n                          Block header                         ')
-  print('-----------------------------------------------------------------')
-
-  print(f'Current block Number: {block_number}')
-  print("New Block Hash:")
-  print(new_hash)
-  print('previous block hash:')
-  print(previous_hash)
-  print('Nonce:')
-  print(nonce)
-  print('-----------------------------------------------------------------')
-  print('\n                          Block Content                        ')
-  print('-----------------------------------------------------------------')
-
-  print('confirmed transaction list:')
-  print(transactions)
-  print('=================================================================')
+  
 
   result = {
         "Current block Number": block_number,
         "New Block Hash": new_hash,
         "previous block hash": previous_hash,
         "Nonce": nonce,
-        "Block Content": "confirmed transaction list",
         "Transactions": transactions
   }
 
   app.logger.info("Mining result: %s", result)
+
+  return jsonify(result), 200
+  #return jsonify(message=f"Done!")
+
+
+@app.route('/validateblocks', methods=['POST'])
+def block_validator():
+
+#   input transaction list
+# 0->A->5 A->B->10 B->C->5 B->C->5
+# Block Number:
+# 2
+# Previous hash:
+# 000000000000000000006bd3d6ef94d8a01de84e171d3553534783b128f06aad
+# nonce:
+# 440
+# Hash of the new block:
+# 0018b090a6039a44a2b094489321548e7b20f3a0a56ba8020f988d864d637069
+# Current Dificulty:
+# 2
+
+
+  vtransaction_list = str(request.form.get('vtransaction_list'))
+  vblock_no = request.form.get('vblock_no')
+  vprev_hash = str(request.form.get('vprev_hash'))
+  vnonce = request.form.get('vnonce')
+  vnew_hash = str(request.form.get('vnew_hash'))
+  vdifficulity = request.form.get('vdifficulity')
+
+  nonce = int(vnonce) -1
+  nonce = str(nonce)
+
+
+  Dificulty = int(vdifficulity)
+  block_result = ""
+  hash_result = ""
+  try:
+    int(vnew_hash[:Dificulty])
+    block_result += " New block meets the difficulty requirment \n"
+  except:
+    block_result += "block is not valid not enough leading zeros \n"
+
+
+  text= str(vblock_no) + vtransaction_list + vprev_hash + str(nonce)
+  #print(text)
+  hash = SHA256(text)
+  if hash == vnew_hash:
+    hash_result += 'New hash value is valid! \n'
+  else:
+    hash_result += 'given nonce does not produce the above hash \n'
+
+  
+  
+
+  result = {
+        "block_result": block_result,
+        "hash_result": hash_result
+  }
+
+  app.logger.info("Validation Result result: %s", result)
 
   return jsonify(result), 200
   #return jsonify(message=f"Done!")

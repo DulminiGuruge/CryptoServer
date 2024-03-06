@@ -3,7 +3,7 @@
 Written in flask.
 
 #### Build the docker container
->  docker build --tag flask-test:0.1 .   
+> docker build --tag flask-test:0.1 .   
 
 #### Run the built docker image
 
