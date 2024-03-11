@@ -3,6 +3,7 @@ from bitcoin import *
 from hashlib import sha256
 import time
 from flask_cors import CORS
+import random
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -23,7 +24,7 @@ def mine(block_number,transaction,previous_hash,prefix_zeros):
     #print(text)
     hash = SHA256(text)
     # print(hash)
-    nonce=nonce+1
+    nonce= random.randint(1, 100000) #nonce+1
     if hash.startswith(prefix_str):
       print("Bitcoin mined with nonce value :",nonce)
       return hash, nonce
