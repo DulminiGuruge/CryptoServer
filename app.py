@@ -23,7 +23,7 @@ def mine(block_number, transaction, previous_hash, prefix_zeros):
         time.sleep(0.005)  # To prevent high CPU usage
         text = str(block_number) + transaction + previous_hash + str(nonce)
         hash_value = SHA256(text)
-        nonce = random.randint(1, 100000)  # Random nonce value
+        
         if hash_value.startswith(prefix_str):
             print("Bitcoin mined with nonce value:", nonce)
             return hash_value, nonce
