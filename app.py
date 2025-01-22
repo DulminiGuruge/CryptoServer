@@ -81,13 +81,7 @@ def block_validator():
         vnew_hash = str(request.form.get('vnew_hash', ''))
         vdifficulty = request.form.get('vdifficulity')
 
-        # Validate inputs
-        try:
-            nonce = int(vnonce) - 1
-            difficulty = int(vdifficulty)
-        except (ValueError, TypeError):
-            return jsonify({"error": "Invalid nonce or difficulty value. Must be integers."}), 400
-
+    
         block_result = ""
         hash_result = ""
 
