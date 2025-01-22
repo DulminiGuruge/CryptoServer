@@ -86,8 +86,10 @@ def block_validator():
 
         # Validate inputs
         try:
-            nonce = int(vnonce) - 1
+            nonce = int(vnonce) 
             difficulty = int(vdifficulty)
+            app.logger.info("Nonce: %s", nonce)
+            app.logger.info("Difficulty: %s", difficulty)
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid nonce or difficulty value. Must be integers."}), 400
 
