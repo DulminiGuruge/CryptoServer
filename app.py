@@ -40,12 +40,7 @@ def mining_machine():
         block_number = request.form.get('block_number')
         previous_hash = str(request.form.get('previous_hash', ''))
 
-        # Validate inputs
-        try:
-            difficulty = int(difficulty) if difficulty else 2
-            block_number = int(block_number) if block_number else 2
-        except ValueError:
-            return jsonify({"error": "Invalid difficulty or block_number value. Must be integers."}), 400
+
 
         coinbase = f'0->{group_id}->5 '
         transactions = coinbase + transactions
