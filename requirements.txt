@@ -8,3 +8,4 @@ click==8.1.7
 blinker==1.7.0
 flask-cors==4.0.0
 bitcoin==1.1.42
+gunicorn==21.2.0  # Add Gunicorn for production
