@@ -43,7 +43,7 @@ def mining_machine():
          # Validate inputs
         try:
             difficulty = int(difficulty) if difficulty else 2
-            block_number = int(block_number) if block_number else 2
+            #block_number = int(block_number) if block_number else 2
         except ValueError:
             return jsonify({"error": "Invalid difficulty or block_number value. Must be integers."}), 400
 
