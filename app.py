@@ -3,17 +3,17 @@ from hashlib import sha256
 import time
 from flask_cors import CORS
 import random
+from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+executor = ThreadPoolExecutor(max_workers=10)  # Handle up to 10 parallel requests
 MAX_NONCE = 10000000
-
 
 def SHA256(text):
     """Returns the SHA-256 hash of the given text."""
     return sha256(text.encode("ascii")).hexdigest()
-
 
 def mine(block_number, transaction, previous_hash, prefix_zeros):
     """Mining function to find a hash with leading zeros."""
@@ -27,12 +27,10 @@ def mine(block_number, transaction, previous_hash, prefix_zeros):
         if hash_value.startswith(prefix_str):
             print("Bitcoin mined with nonce value:", nonce)
             return hash_value, nonce
-    print("Could not find a hash in the given range up to", MAX_NONCE)
-
 
 @app.route('/startmining', methods=['POST'])
 def mining_machine():
-    """API endpoint to start mining."""
+    """API endpoint to start mining asynchronously."""
     try:
         group_id = str(request.form.get('group_id', ''))
         transactions = str(request.form.get('transactions', ''))
@@ -40,24 +38,20 @@ def mining_machine():
         block_number = request.form.get('block_number')
         previous_hash = str(request.form.get('previous_hash', ''))
 
-        # Validate difficulty input
+        # Validate inputs
         try:
             difficulty = int(difficulty) if difficulty else 2
-        except ValueError:
-            return jsonify({"error": "Invalid difficulty value. Must be an integer."}), 400
-
-        # Validate block number input
-        try:
             block_number = int(block_number) if block_number else 2
         except ValueError:
-            return jsonify({"error": "Invalid block_number value. Must be an integer."}), 400
+            return jsonify({"error": "Invalid difficulty or block_number value. Must be integers."}), 400
 
         coinbase = f'0->{group_id}->5 '
         transactions = coinbase + transactions
 
-        start_time = time.time()
-        new_hash, nonce = mine(block_number, transactions, previous_hash, difficulty)
-        time_taken = time.time() - start_time
+        # Run mining asynchronously
+        future = executor.submit(mine, block_number, transactions, previous_hash, difficulty)
+        new_hash, nonce = future.result()
+        time_taken = future.done()
 
         result = {
             "Current Block Number": block_number,
@@ -74,10 +68,9 @@ def mining_machine():
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
-
 @app.route('/validateblocks', methods=['POST'])
 def block_validator():
-    """API endpoint to validate blocks."""
+    """API endpoint to validate blocks asynchronously."""
     try:
         vtransaction_list = str(request.form.get('vtransaction_list', ''))
         vblock_no = request.form.get('vblock_no')
@@ -86,7 +79,7 @@ def block_validator():
         vnew_hash = str(request.form.get('vnew_hash', ''))
         vdifficulty = request.form.get('vdifficulity')
 
-        # Validate numeric inputs
+        # Validate inputs
         try:
             nonce = int(vnonce) - 1
             difficulty = int(vdifficulty)
@@ -96,14 +89,10 @@ def block_validator():
         block_result = ""
         hash_result = ""
 
-        try:
-            # Check if the hash starts with required leading zeros
-            if vnew_hash.startswith('0' * difficulty):
-                block_result += "New block meets the difficulty requirement.\n"
-            else:
-                block_result += "Block is not valid; not enough leading zeros.\n"
-        except Exception as e:
-            block_result += f"Error validating hash difficulty: {str(e)}\n"
+        if vnew_hash.startswith('0' * difficulty):
+            block_result += "New block meets the difficulty requirement.\n"
+        else:
+            block_result += "Block is not valid; not enough leading zeros.\n"
 
         # Validate the hash
         text = str(vblock_no) + vtransaction_list + vprev_hash + str(nonce)
@@ -124,12 +113,10 @@ def block_validator():
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
-
 @app.route('/greet', methods=['GET'])
 def greet():
     """Simple greeting endpoint."""
     return jsonify(message="Hello!")
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=7655, debug=False)
+    app.run(host='0.0.0.0', port=7655, threaded=True, debug=False)
