@@ -82,7 +82,7 @@ def block_validator():
         vprev_hash = str(request.form.get('vprev_hash', ''))
         vnonce = request.form.get('vnonce')
         vnew_hash = str(request.form.get('vnew_hash', ''))
-        vdifficulty = request.form.get('vdifficulity')
+        vdifficulty = request.form.get('vdifficulty')
 
         # Validate inputs
         try:
